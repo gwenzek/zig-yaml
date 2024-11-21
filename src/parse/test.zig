@@ -774,6 +774,7 @@ test "mixed ints with floats in a list" {
 test "colon in name" {
     try parseSuccess(
         \\a:
-        \\  b: hello::world
+        \\  b:c: hello:world
+        \\  :d: greetings
     );
 }
