@@ -269,19 +269,21 @@ pub fn next(self: *Tokenizer) Token {
             },
 
             .literal => switch (c) {
-                '\r', '\n', ' ', '\'', '"', ':', ']', '}' => {
+                '\r', '\n', ' ', '\'', '"', ']', '}' => {
                     result.id = .literal;
                     break;
                 },
-                ',', '[', '{' => {
+                ':' => if (self.matchesPattern(": ") or self.matchesPattern(":\n")) {
                     result.id = .literal;
+                    break;
+                } else {},
+                ',', '[', '{' => {
                     if (self.in_flow > 0) {
+                        result.id = .literal;
                         break;
                     }
                 },
-                else => {
-                    result.id = .literal;
-                },
+                else => {},
             },
         }
     }
