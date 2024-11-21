@@ -770,3 +770,11 @@ test "mixed ints with floats in a list" {
         \\[0, 1.0]
     );
 }
+
+test "colon in name" {
+    try parseSuccess(
+        \\a:
+        \\  b:c: hello:world
+        \\  :d: greetings
+    );
+}

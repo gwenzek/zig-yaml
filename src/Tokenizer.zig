@@ -183,10 +183,12 @@ pub fn next(self: *Tokenizer) Token {
                     self.in_flow -|= 1;
                     break;
                 },
-                ':' => {
+                ':' => if (self.matchesPattern(": ") or self.matchesPattern(":\n")) {
                     result.id = .map_value_ind;
                     self.index += 1;
                     break;
+                } else {
+                    state = .literal;
                 },
                 '{' => {
                     result.id = .flow_map_start;
@@ -269,19 +271,21 @@ pub fn next(self: *Tokenizer) Token {
             },
 
             .literal => switch (c) {
-                '\r', '\n', ' ', '\'', '"', ':', ']', '}' => {
+                '\r', '\n', ' ', '\'', '"', ']', '}' => {
                     result.id = .literal;
                     break;
                 },
-                ',', '[', '{' => {
+                ':' => if (self.matchesPattern(": ") or self.matchesPattern(":\n")) {
                     result.id = .literal;
+                    break;
+                } else {},
+                ',', '[', '{' => {
                     if (self.in_flow > 0) {
+                        result.id = .literal;
                         break;
                     }
                 },
-                else => {
-                    result.id = .literal;
-                },
+                else => {},
             },
         }
     }
@@ -400,6 +404,24 @@ test "mappings" {
     try testExpected(
         \\key1: value1
         \\key2: value2
+    , &[_]Token.Id{
+        .literal,
+        .map_value_ind,
+        .space,
+        .literal,
+        .new_line,
+        .literal,
+        .map_value_ind,
+        .space,
+        .literal,
+        .eof,
+    });
+}
+
+test "mappings with colons in name" {
+    try testExpected(
+        \\b:c: hello:world
+        \\:d: greetings
     , &[_]Token.Id{
         .literal,
         .map_value_ind,
